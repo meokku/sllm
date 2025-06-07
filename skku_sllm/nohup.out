@@ -1,0 +1,8 @@
+usage: run_crawler.py [-h]
+                      [--mode {dfs,all,notices,events,departments,facilities,menu,page}]
+                      [--start-url START_URL] [--menu-url MENU_URL]
+                      [--page-url PAGE_URL] [--max-depth MAX_DEPTH]
+                      [--max-pages MAX_PAGES] [--category-limit]
+                      [--forbidden-patterns FORBIDDEN_PATTERNS [FORBIDDEN_PATTERNS ...]]
+                      [--output-dir OUTPUT_DIR]
+run_crawler.py: error: unrecognized arguments: --max_depth

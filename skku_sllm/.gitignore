@@ -1,0 +1,44 @@
+# 모델 관련 파일
+models/base/
+models/finetuned/
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# 데이터 폴더
+data/raw/
+data/processed/
+
+# 로그 및 결과
+logs/
+results/
+
+# 캐시 파일
+__pycache__/
+*.py[cod]
+*.class
+.ipynb_checkpoints/
+.cache/
+
+# 환경 설정
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE 설정
+.idea/
+.vscode/
+*.swp
+*.swo
+./crawler_output.log
+
+# 운영체제 파일
+.DS_Store
+Thumbs.db
+
+# Hugging Face 캐시
+.huggingface/
