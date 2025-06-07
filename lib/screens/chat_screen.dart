@@ -214,47 +214,41 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       Expanded(
                         child: chatSessionProvider.isLoading
                             ? Center(child: CircularProgressIndicator())
-                            : ListView.builder(
-                                itemCount: chatSessionProvider
-                                        .chatSessions.isEmpty
-                                    ? 1
-                                    : chatSessionProvider.chatSessions.length,
-                                itemBuilder: (context, index) {
-                                  if (chatSessionProvider
-                                      .chatSessions.isEmpty) {
-                                    return Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Text("채팅 내역이 없습니다.",
-                                          style: TextStyle(color: Colors.grey)),
-                                    );
-                                  }
+                            : Builder(builder: (context) {
+                                // 화면 build 시 복사본 준비 (Stack 복사본)
+                                List<Chat> stackCopy =
+                                    List.from(chatSessionProvider.chatSessions);
 
-                                  final chat =
-                                      chatSessionProvider.chatSessions[index];
-                                  final isSelected = chat.id ==
-                                      chatSessionProvider.activeChat?.id;
+                                return ListView.builder(
+                                  itemCount: stackCopy.length,
+                                  itemBuilder: (context, index) {
+                                    // Stack pop → LIFO 시연
+                                    final chat = stackCopy.removeLast();
 
-                                  return Material(
-                                    color: isSelected
-                                        ? Colors.grey[300]
-                                        : Colors.grey[100],
-                                    child: InkWell(
-                                      onTap: () {
-                                        chatSessionProvider.selectChat(chat.id);
-                                      },
-                                      child: Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 8, horizontal: 12),
-                                        child: Text(
-                                          chat.title,
-                                          style: TextStyle(fontSize: 14),
+                                    return Material(
+                                      color: Colors.grey[100],
+                                      child: InkWell(
+                                        onTap: () {
+                                          // 클릭 시 → 원본 _chatSessions 기준으로 selectChat
+                                          chatSessionProvider
+                                              .selectChat(chat.id);
+                                          Navigator.pushReplacementNamed(
+                                              context, '/chat');
+                                        },
+                                        child: Container(
+                                          width: double.infinity,
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 8, horizontal: 12),
+                                          child: Text(
+                                            chat.title,
+                                            style: TextStyle(fontSize: 14),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
+                                    );
+                                  },
+                                );
+                              }),
                       ),
                     ]
                   ],
