@@ -166,7 +166,12 @@ class ActiveChatProvider with ChangeNotifier {
       }
 
       // 최종 AI 메시지 저장
-      await _firebaseService.saveMessage(activeChat.id, aiMessage);
+      final finalMessage = Message(
+        content: aiContent,
+        isUser: false,
+        timestamp: DateTime.now(),
+      );
+      await _firebaseService.saveMessage(activeChat.id, finalMessage);
     } catch (e) {
       // 오류 메시지 저장
       final errorMessage = Message(
