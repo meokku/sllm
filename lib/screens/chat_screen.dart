@@ -484,6 +484,31 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildMessageBubble(Message message) {
+    // 빈 문자열 처리 + "타이핑 중..." 처리
+    if (message.content.trim().isEmpty) {
+      // AI 메시지일 경우 "타이핑 중..." 표시
+      if (!message.isUser) {
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            padding: EdgeInsets.all(12),
+            margin: EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              '타이핑 중...',
+              style:
+                  TextStyle(color: Colors.black54, fontStyle: FontStyle.italic),
+            ),
+          ),
+        );
+      } else {
+        // 유저 메시지 빈 경우는 숨김
+        return SizedBox.shrink();
+      }
+    }
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(

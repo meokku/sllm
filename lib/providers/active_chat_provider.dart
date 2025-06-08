@@ -126,16 +126,46 @@ class ActiveChatProvider with ChangeNotifier {
       // 사용자 메시지 저장
       await _firebaseService.saveMessage(activeChat.id, userMessage);
 
-      // AI 응답 요청
-      final response = await _llmService.askLlama(text);
+      // // AI 응답 요청
+      // final response = await _llmService.askLlama(text);
 
-      // AI 메시지 저장
+      // // AI 메시지 저장
+      // final aiMessage = Message(
+      //   content: response,
+      //   isUser: false,
+      //   timestamp: DateTime.now(),
+      // );
+      // AI 메시지 초기 생성 (빈 텍스트로 먼저 추가)
+      var aiContent = '';
       final aiMessage = Message(
-        content: response,
+        content: aiContent,
         isUser: false,
         timestamp: DateTime.now(),
       );
+      _messages.add(aiMessage);
+      notifyListeners();
 
+      // AI 응답 Streaming 요청
+      final stream = _llmService.askLlamaStream(text);
+
+      // 스트리밍 응답 처리
+      await for (final chunk in stream) {
+        aiContent += chunk;
+
+        // 리스트에서 기존 메시지 위치 찾기
+        final index = _messages.indexOf(aiMessage);
+        if (index != -1) {
+          // 새 Message 객체로 교체
+          _messages[index] = Message(
+            content: aiContent,
+            isUser: false,
+            timestamp: aiMessage.timestamp,
+          );
+          notifyListeners(); // 매번 업데이트해서 UI 실시간 갱신
+        }
+      }
+
+      // 최종 AI 메시지 저장
       await _firebaseService.saveMessage(activeChat.id, aiMessage);
     } catch (e) {
       // 오류 메시지 저장
