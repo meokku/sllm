@@ -145,6 +145,9 @@ class ActiveChatProvider with ChangeNotifier {
       _messages.add(aiMessage);
       notifyListeners();
 
+      // aiMessage의 인덱스를 고정
+      final aiIndex = _messages.length - 1;
+
       // AI 응답 Streaming 요청
       final stream = _llmService.askLlamaStream(text);
 
@@ -152,26 +155,17 @@ class ActiveChatProvider with ChangeNotifier {
       await for (final chunk in stream) {
         aiContent += chunk;
 
-        // 리스트에서 기존 메시지 위치 찾기
-        final index = _messages.indexOf(aiMessage);
-        if (index != -1) {
-          // 새 Message 객체로 교체
-          _messages[index] = Message(
-            content: aiContent,
-            isUser: false,
-            timestamp: aiMessage.timestamp,
-          );
-          notifyListeners(); // 매번 업데이트해서 UI 실시간 갱신
-        }
+        // 인덱스를 고정해서 업데이트
+        _messages[aiIndex] = Message(
+          content: aiContent,
+          isUser: false,
+          timestamp: aiMessage.timestamp,
+        );
+        notifyListeners(); // 매번 업데이트해서 UI 실시간 갱신
       }
 
       // 최종 AI 메시지 저장
-      final finalMessage = Message(
-        content: aiContent,
-        isUser: false,
-        timestamp: DateTime.now(),
-      );
-      await _firebaseService.saveMessage(activeChat.id, finalMessage);
+      await _firebaseService.saveMessage(activeChat.id, _messages[aiIndex]);
     } catch (e) {
       // 오류 메시지 저장
       final errorMessage = Message(
