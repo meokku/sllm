@@ -37,8 +37,7 @@ class ActiveChatProvider with ChangeNotifier {
     // 메시지 스트림 구독 취소
     _messagesStreamSubscription?.cancel();
 
-    // 메시지 목록 초기화
-    _messages.clear();
+    // _messages.clear(); // 기존 메시지 삭제하지 않음
 
     if (activeChat != null) {
       // 강제로 메시지 다시 로드
@@ -89,18 +88,15 @@ class ActiveChatProvider with ChangeNotifier {
 
   void setInitialMessage(String content) {
     print('setInitialMessage: $content');
-    // 사용자 메시지 객체 생성
+    // 기존 메시지 유지, 새 메시지만 추가
     final userMessage = Message(
       content: content,
       isUser: true,
       timestamp: DateTime.now(),
     );
-
-    // 메시지 목록에 추가
     _messages.add(userMessage);
     notifyListeners();
 
-    // 로딩 상태 설정 (UI에 로딩 표시됨)
     _isLoading = true;
     notifyListeners();
   }
@@ -128,6 +124,9 @@ class ActiveChatProvider with ChangeNotifier {
       // 사용자 메시지 저장
       await _firebaseService.saveMessage(activeChat.id, userMessage);
 
+      // WebSocket chunk 수신 중에는 Firebase 리스너 일시 중지
+      _messagesStreamSubscription?.pause();
+
       // AI 메시지 초기 생성 (빈 텍스트로 먼저 추가)
       var aiContent = '';
       final aiMessage = Message(
@@ -141,7 +140,7 @@ class ActiveChatProvider with ChangeNotifier {
       // aiMessage의 인덱스를 고정
       final aiIndex = _messages.length - 1;
 
-      // WebSocket 방식으로 실시간 답변 받기
+      // WebSocket 방식으로 실시간 답변 받기 (chunk마다 UI만 갱신)
       await for (final chunk in _llmService.askLlamaWebSocket(text)) {
         aiContent += chunk;
         _messages[aiIndex] = Message(
@@ -152,7 +151,7 @@ class ActiveChatProvider with ChangeNotifier {
         notifyListeners();
       }
 
-      // 최종 AI 메시지 저장 (chunk 수신이 끝난 뒤)
+      // 최종 AI 메시지 저장 (chunk 수신이 끝난 뒤에만 저장)
       await _firebaseService.saveMessage(activeChat.id, _messages[aiIndex]);
     } catch (e) {
       // 오류 메시지 저장
@@ -161,9 +160,10 @@ class ActiveChatProvider with ChangeNotifier {
         isUser: false,
         timestamp: DateTime.now(),
       );
-
       await _firebaseService.saveMessage(activeChat.id, errorMessage);
     } finally {
+      // WebSocket chunk 수신이 끝나면 Firebase 리스너 재개
+      _messagesStreamSubscription?.resume();
       _isLoading = false;
       notifyListeners();
     }

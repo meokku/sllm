@@ -78,7 +78,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool force = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -127,11 +127,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final chatSessionProvider = Provider.of<ChatSessionProvider>(context);
     final activeChatProvider = Provider.of<ActiveChatProvider>(context);
     final user = _authService.currentUser;
-
-    // 새 메시지가 추가되면 스크롤
-    if (activeChatProvider.messages.isNotEmpty) {
-      _scrollToBottom();
-    }
 
     return Scaffold(
       body: Stack(children: [
@@ -218,21 +213,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         child: chatSessionProvider.isLoading
                             ? Center(child: CircularProgressIndicator())
                             : Builder(builder: (context) {
-                                // 화면 build 시 복사본 준비 (Stack 복사본)
-                                List<Chat> stackCopy = List.from(
-                                    chatSessionProvider.chatSessions.reversed);
-
+                                // Stack 복사본 준비
+                                List<Chat> stackCopy =
+                                    List.from(chatSessionProvider.chatStack);
                                 return ListView.builder(
                                   itemCount: stackCopy.length,
                                   itemBuilder: (context, index) {
                                     // Stack pop → LIFO 시연
-                                    final chat = stackCopy.removeLast();
-
+                                    final chat = stackCopy.isNotEmpty
+                                        ? stackCopy.removeLast()
+                                        : null;
+                                    if (chat == null) return SizedBox.shrink();
                                     return Material(
                                       color: Colors.grey[100],
                                       child: InkWell(
                                         onTap: () {
-                                          // 클릭 시 → 원본 _chatSessions 기준으로 selectChat
                                           chatSessionProvider
                                               .selectChat(chat.id);
                                           Navigator.pushReplacementNamed(
@@ -436,6 +431,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                             activeChatProvider
                                                 .sendMessage(text);
                                             _textController.clear();
+                                            _scrollToBottom(force: true);
                                           }
                                         },
                                       ),
@@ -455,6 +451,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                             activeChatProvider.sendMessage(
                                                 _textController.text);
                                             _textController.clear();
+                                            _scrollToBottom(force: true);
                                           }
                                         },
                                       ),
@@ -604,7 +601,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(20.0),
         ),
         constraints: BoxConstraints(maxWidth: 600),
-        child: Text(
+        child: SelectableText(
           message.content,
           style: TextStyle(
             color: message.isUser ? Colors.white : Colors.black87,

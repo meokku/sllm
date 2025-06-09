@@ -6,6 +6,7 @@ import 'package:swlab_sllm_app/screens/chat_screen.dart';
 import 'package:swlab_sllm_app/services/auth_service.dart';
 import 'package:swlab_sllm_app/theme/colors.dart';
 import 'package:swlab_sllm_app/utils/profile_menu.dart';
+import 'package:swlab_sllm_app/models/chat_models.dart';
 
 // 서버 주소를 상단에 정의
 // const String serverBaseUrl = 'http://서버주소:포트';
@@ -254,20 +255,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ? Center(child: CircularProgressIndicator())
                               : ListView.builder(
                                   itemCount:
-                                      chatSessionProvider.chatSessions.length,
+                                      chatSessionProvider.chatStack.length,
                                   itemBuilder: (context, index) {
-                                    final chat =
-                                        chatSessionProvider.chatSessions[index];
-
+                                    // Stack 복사본 준비
+                                    List<Chat> stackCopy = List.from(
+                                        chatSessionProvider.chatStack);
+                                    final chat = stackCopy.isNotEmpty
+                                        ? stackCopy.removeLast()
+                                        : null;
+                                    if (chat == null) return SizedBox.shrink();
                                     return Material(
                                       color: Colors.grey[100],
                                       child: InkWell(
                                         onTap: () {
-                                          // 해당 채팅만 선택 (새 채팅 생성 안 함)
                                           chatSessionProvider
                                               .selectChat(chat.id);
-
-                                          // 채팅 화면으로 이동
                                           Navigator.pushReplacementNamed(
                                               context, '/chat');
                                         },

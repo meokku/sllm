@@ -19,11 +19,8 @@ class ChatSessionProvider with ChangeNotifier {
     _loadChats();
   }
 
-  // List<Chat> get chatSessions => List.unmodifiable(_chatSessions);
-  List<Chat> get chatSessions => List.unmodifiable(_chatStack); // UI는 Stack만 사용
-  // 전체 Firestore 원본 필요 시 사용 가능
-  List<Chat> get allChats => List.unmodifiable(_chatSessions);
-
+  List<Chat> get chatSessions => List.unmodifiable(_chatSessions);
+  List<Chat> get chatStack => List.unmodifiable(_chatStack); // UI는 Stack만 사용
   Chat? get activeChat => _activeChat;
   bool get isLoading => _loading;
 
@@ -82,15 +79,13 @@ class ChatSessionProvider with ChangeNotifier {
           );
         }).toList();
 
-        // // 초기 채팅이 있으면 첫 번째 채팅 선택
-        // if (_chatSessions.isNotEmpty && _activeChat == null) {
-        //   _activeChat = _chatSessions.first;
-        // }
+        // 오래된 순서로 정렬 (timestamp 오름차순)
+        _chatSessions.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
-        // Stack 초기화 → 전체 chat을 Stack에 push 형태로 쌓기
+        // Stack 초기화 → 정렬된 chat을 Stack에 push 형태로 쌓기
         _chatStack.clear();
         for (var chat in _chatSessions) {
-          _chatStack.add(chat); // Stack push
+          pushChat(chat);
         }
 
         // Stack top 기준으로 activeChat 설정
