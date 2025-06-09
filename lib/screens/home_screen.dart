@@ -7,6 +7,9 @@ import 'package:swlab_sllm_app/services/auth_service.dart';
 import 'package:swlab_sllm_app/theme/colors.dart';
 import 'package:swlab_sllm_app/utils/profile_menu.dart';
 
+// 서버 주소를 상단에 정의
+// const String serverBaseUrl = 'http://서버주소:포트';
+
 class HomeScreen extends StatefulWidget {
   final String? initialUserName;
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class LlmService {
   final String baseUrl;
@@ -64,5 +65,17 @@ class LlmService {
     } catch (e) {
       return false;
     }
+  }
+
+  // WebSocket 기반 실시간 스트리밍
+  Stream<String> askLlamaWebSocket(String question) async* {
+    final wsUrl = '${baseUrl.replaceFirst('http', 'ws')}/ws/predict/';
+    final channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+    channel.sink.add(question);
+    await for (final chunk in channel.stream) {
+      if (chunk == '[DONE]') break;
+      yield chunk;
+    }
+    channel.sink.close();
   }
 }

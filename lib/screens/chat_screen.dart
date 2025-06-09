@@ -9,6 +9,9 @@ import 'package:swlab_sllm_app/services/auth_service.dart';
 import 'package:swlab_sllm_app/theme/colors.dart';
 import 'package:swlab_sllm_app/utils/profile_menu.dart';
 
+// 서버 주소를 상단에 정의
+// const String serverBaseUrl = 'http://서버주소:포트';
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -216,8 +219,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                             ? Center(child: CircularProgressIndicator())
                             : Builder(builder: (context) {
                                 // 화면 build 시 복사본 준비 (Stack 복사본)
-                                List<Chat> stackCopy =
-                                    List.from(chatSessionProvider.chatSessions);
+                                List<Chat> stackCopy = List.from(
+                                    chatSessionProvider.chatSessions.reversed);
 
                                 return ListView.builder(
                                   itemCount: stackCopy.length,
@@ -328,6 +331,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                         ),
                                         onSubmitted: (text) {
                                           if (!activeChatProvider.isLoading) {
+                                            activeChatProvider
+                                                .setInitialMessage(text);
                                             activeChatProvider
                                                 .sendMessage(text);
                                             _textController.clear();

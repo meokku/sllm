@@ -88,6 +88,7 @@ class ActiveChatProvider with ChangeNotifier {
   }
 
   void setInitialMessage(String content) {
+    print('setInitialMessage: $content');
     // 사용자 메시지 객체 생성
     final userMessage = Message(
       content: content,
@@ -105,6 +106,7 @@ class ActiveChatProvider with ChangeNotifier {
   }
 
   Future<void> sendMessage(String text) async {
+    print('sendMessage called: $text');
     if (text.trim().isEmpty) return;
 
     // 활성화된 채팅이 없으면 새로 만듦
@@ -126,15 +128,6 @@ class ActiveChatProvider with ChangeNotifier {
       // 사용자 메시지 저장
       await _firebaseService.saveMessage(activeChat.id, userMessage);
 
-      // // AI 응답 요청
-      // final response = await _llmService.askLlama(text);
-
-      // // AI 메시지 저장
-      // final aiMessage = Message(
-      //   content: response,
-      //   isUser: false,
-      //   timestamp: DateTime.now(),
-      // );
       // AI 메시지 초기 생성 (빈 텍스트로 먼저 추가)
       var aiContent = '';
       final aiMessage = Message(
@@ -148,23 +141,18 @@ class ActiveChatProvider with ChangeNotifier {
       // aiMessage의 인덱스를 고정
       final aiIndex = _messages.length - 1;
 
-      // AI 응답 Streaming 요청
-      final stream = _llmService.askLlamaStream(text);
-
-      // 스트리밍 응답 처리
-      await for (final chunk in stream) {
+      // WebSocket 방식으로 실시간 답변 받기
+      await for (final chunk in _llmService.askLlamaWebSocket(text)) {
         aiContent += chunk;
-
-        // 인덱스를 고정해서 업데이트
         _messages[aiIndex] = Message(
           content: aiContent,
           isUser: false,
           timestamp: aiMessage.timestamp,
         );
-        notifyListeners(); // 매번 업데이트해서 UI 실시간 갱신
+        notifyListeners();
       }
 
-      // 최종 AI 메시지 저장
+      // 최종 AI 메시지 저장 (chunk 수신이 끝난 뒤)
       await _firebaseService.saveMessage(activeChat.id, _messages[aiIndex]);
     } catch (e) {
       // 오류 메시지 저장
