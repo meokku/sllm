@@ -73,6 +73,7 @@ class LlmService {
     final channel = WebSocketChannel.connect(Uri.parse(wsUrl));
     channel.sink.add(question);
     await for (final chunk in channel.stream) {
+      print('WebSocket received: $chunk');
       if (chunk == '[DONE]') break;
       yield chunk;
     }

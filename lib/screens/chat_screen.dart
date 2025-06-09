@@ -242,9 +242,109 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                           width: double.infinity,
                                           padding: EdgeInsets.symmetric(
                                               vertical: 8, horizontal: 12),
-                                          child: Text(
-                                            chat.title,
-                                            style: TextStyle(fontSize: 14),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  chat.title,
+                                                  style:
+                                                      TextStyle(fontSize: 14),
+                                                ),
+                                              ),
+                                              PopupMenuButton<String>(
+                                                onSelected: (value) async {
+                                                  if (value == 'rename') {
+                                                    final newName =
+                                                        await showDialog<
+                                                            String>(
+                                                      context: context,
+                                                      builder: (context) {
+                                                        String temp =
+                                                            chat.title;
+                                                        return AlertDialog(
+                                                          title:
+                                                              Text('채팅 이름 수정'),
+                                                          content: TextField(
+                                                            autofocus: true,
+                                                            controller:
+                                                                TextEditingController(
+                                                                    text: chat
+                                                                        .title),
+                                                            onChanged: (v) =>
+                                                                temp = v,
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                      context,
+                                                                      null),
+                                                              child: Text('취소'),
+                                                            ),
+                                                            TextButton(
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                      context,
+                                                                      temp),
+                                                              child: Text('저장'),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                    if (newName != null &&
+                                                        newName
+                                                            .trim()
+                                                            .isNotEmpty) {
+                                                      await chatSessionProvider
+                                                          .updateChatTitle(
+                                                              chat.id,
+                                                              newName.trim());
+                                                    }
+                                                  } else if (value ==
+                                                      'delete') {
+                                                    final confirm =
+                                                        await showDialog<bool>(
+                                                      context: context,
+                                                      builder: (context) =>
+                                                          AlertDialog(
+                                                        title: Text('채팅 삭제'),
+                                                        content: Text(
+                                                            '정말로 이 채팅을 삭제하시겠습니까?'),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                    context,
+                                                                    false),
+                                                            child: Text('취소'),
+                                                          ),
+                                                          TextButton(
+                                                            onPressed: () =>
+                                                                Navigator.pop(
+                                                                    context,
+                                                                    true),
+                                                            child: Text('삭제'),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                    if (confirm == true) {
+                                                      await chatSessionProvider
+                                                          .deleteChat(chat.id);
+                                                    }
+                                                  }
+                                                },
+                                                itemBuilder: (context) => [
+                                                  PopupMenuItem(
+                                                      value: 'rename',
+                                                      child: Text('채팅 이름 수정')),
+                                                  PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Text('채팅 삭제')),
+                                                ],
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
