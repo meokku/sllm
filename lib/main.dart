@@ -40,9 +40,9 @@ class MyApp extends StatelessWidget {
         Provider<LlmService>(
           create: (context) => LlmService(
             // port 열어두긴 했는데 오류가 있어서 일단 ngrok 계속 이용 -> 해결되었음 !
-            // baseUrl: 'https://13ca-115-145-67-222.ngrok-free.app',
+            baseUrl: 'ws://c999-115-145-67-222.ngrok-free.app',
             // baseUrl: 'http://localhost:8000',
-            baseUrl: 'ws://localhost:8000',
+            // baseUrl: 'ws://localhost:8000',
             // baseUrl: 'ws://192.168.0.12:8000',
           ),
         ),
